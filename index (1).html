@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mi IP y ubicación</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 18px; line-height: 1.5; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin-top: 16px; }
+    button { padding: 12px 18px; border: 0; border-radius: 8px; cursor: pointer; font-size: 16px; }
+    pre { white-space: pre-wrap; word-break: break-word; background: #f6f6f6; padding: 14px; border-radius: 8px; }
+    .note { font-size: 14px; color: #555; }
+  </style>
+</head>
+<body>
+  <h1>Mi IP y ubicación</h1>
+  <p>Esta página muestra tu IP pública automáticamente. Para obtener ubicación precisa, el navegador te pedirá autorización.</p>
+
+  <div class="card">
+    <h2>IP pública</h2>
+    <pre id="ipResult">Consultando...</pre>
+  </div>
+
+  <div class="card">
+    <h2>Ubicación precisa</h2>
+    <button onclick="getLocation()">Obtener mi ubicación</button>
+    <pre id="locResult">Pendiente.</pre>
+    <p class="note">La ubicación GPS/Wi‑Fi requiere permiso del navegador.</p>
+  </div>
+
+  <script>
+    async function getIP() {
+      const out = document.getElementById('ipResult');
+      try {
+        const r = await fetch('https://api.ipify.org?format=json');
+        const data = await r.json();
+        out.textContent = JSON.stringify({
+          ip: data.ip,
+          fecha_hora: new Date().toISOString()
+        }, null, 2);
+      } catch (e) {
+        out.textContent = 'No se pudo consultar la IP.';
+      }
+    }
+
+    function getLocation() {
+      const out = document.getElementById('locResult');
+      if (!navigator.geolocation) {
+        out.textContent = 'Este navegador no soporta geolocalización.';
+        return;
+      }
+      out.textContent = 'Esperando autorización...';
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          out.textContent = JSON.stringify({
+            latitud: pos.coords.latitude,
+            longitud: pos.coords.longitude,
+            precision_metros: pos.coords.accuracy,
+            fecha_hora: new Date(pos.timestamp).toISOString()
+          }, null, 2);
+        },
+        err => {
+          out.textContent = 'No se pudo obtener la ubicación: ' + err.message;
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    }
+
+    getIP();
+  </script>
+</body>
+</html>
